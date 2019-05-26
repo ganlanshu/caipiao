@@ -5,6 +5,8 @@ from bs4 import BeautifulSoup
 import requests
 import datetime
 import sqlite3
+import logging
+logger = logging.getLogger()
 
 CAIPIAO_URL = 'https://trade.500.com/jczq/'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -15,18 +17,15 @@ def crawl_caipiao():
         'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36'
     }
     html_content = requests.get(CAIPIAO_URL, timeout=5, headers=headers).text
-    soup = BeautifulSoup(html_content)
+    soup = BeautifulSoup(html_content, "html.parser")
     rows = soup.find_all('tr', class_='bet-tb-tr')
     match_list = []
 
     now = datetime.datetime.now()
     TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
     for row in rows:
-        trade_start = row['data-matchdate'] + ' ' + row['data-matchtime'] + ':00'
-        #trade_start = row.find('td', class_='td td-endtime').text
-        # trade_start format 05-27 06:00
         # 让时间格式统一成 %Y-%m-%d %H:%M:%S
-        #trade_start_str = str(now.year) + '-' + ':00'
+        trade_start = row['data-matchdate'] + ' ' + row['data-matchtime'] + ':00'
         # 比赛时间一开始，就没有抓数据的价值
         if datetime.datetime.strptime(trade_start, TIME_FORMAT) <= now:
             continue
@@ -36,7 +35,6 @@ def crawl_caipiao():
         trade_no = row.find('td', class_='td td-no').a.text
         # 赛事
         trade_event = row.find('td', class_='td td-evt').a.text
-        # 开赛时间
         team = row.find('td', class_='td td-team').div
         # 主队
         team_l = team.find('span', class_='team-l').text
@@ -73,6 +71,5 @@ def insert_data_to_sqllite():
 
 
 if __name__ == '__main__':
-    #insert_data_to_sqllite(crawl_caipiao())
     match_list = crawl_caipiao()
     insert_data_to_sqllite(match_list)
