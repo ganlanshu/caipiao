@@ -151,4 +151,4 @@ if __name__ == '__main__':
     #match_list = crawl_caipiao()
     #insert_data_to_sqllite(match_list)
     #insert_data_to_sqllite()
-    #insert_match_result_to_sqlite()
+    insert_match_result_to_sqlite()
