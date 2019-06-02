@@ -1,6 +1,6 @@
 # coding=utf-8
 from apscheduler.schedulers.blocking import BlockingScheduler
-from spider import insert_data_to_sqllite
+from spider import insert_data_to_sqllite, insert_match_result_to_sqlite
 
 
 if __name__ == '__main__':

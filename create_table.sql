@@ -13,3 +13,13 @@ CREATE TABLE lottery_score (id INTEGER PRIMARY KEY AUTOINCREMENT,
     created_time text not null
 );
 
+
+CREATE TABLE lottery_score_result (id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trade_id int not null,
+    team_score char(10),
+    concede_point int,
+    team_l_result int,
+    extra_score char(50),
+    created_time text not null
+);
+

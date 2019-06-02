@@ -1,4 +1,5 @@
 *.idea
 *.py~
 *.pyc
+*.db
 logs
