@@ -7,7 +7,9 @@ import json
 import requests
 import datetime
 from bs4 import BeautifulSoup
-logger = logging.getLogger()
+from log_config import logger
+
+log = logging.getLogger('scrawl.match')
 
 CAIPIAO_URL = 'https://trade.500.com/jczq/'
 TIME_FORMAT = '%Y-%m-%d %H:%M:%S'
@@ -54,7 +56,7 @@ def crawl_caipiao():
                            '{}')
             match_list.append(match_tuple)
         else:
-            print(trade_id, trade_no)
+            log.info('match %s  on date %s has no score' % (trade_no, trade_start))
     return match_list
 
 
@@ -71,9 +73,10 @@ def insert_data_to_sqllite():
     conn.close()
 
 
-def scraw_caipiao_result():
+def scraw_caipiao_result(yesterday=None):
     RESULT_URL = 'https://trade.500.com/jczq'
-    yesterday = datetime.datetime.today().date() - datetime.timedelta(days=1)
+    if not yesterday:
+        yesterday = datetime.datetime.today().date() - datetime.timedelta(days=1)
     yesterday_str = yesterday.strftime(DATE_FORMAT)
     params = {'date': yesterday_str}
     headers = {
@@ -111,16 +114,16 @@ def scraw_caipiao_result():
             # 不让球的分数
             scores_no_rangqiu = scores.find('div', class_='betbtn-row itm-rangB1')
             team_l_result.append(int(scores_no_rangqiu.find('p', class_='betbtn betbtn-ok')['data-value']))
-            score_dict = {}
+            score_dict = dict()
             score_dict['win_score'] = scores.find_all('p')[0].span.text
             score_dict['draw_score'] = scores.find_all('p')[1].span.text
             score_dict['lose_score'] = scores.find_all('p')[2].span.text
             extra_score.append(score_dict)
 
-            # 让去的分数
+            # 让球的分数
             scores_rangqiu = scores.find('div', class_='betbtn-row itm-rangB2')
             team_l_result.append(int(scores_rangqiu.find('p', class_='betbtn betbtn-ok')['data-value']))
-            score_dict = {}
+            score_dict = dict()
             score_dict['win_score'] = scores.find_all('p')[3].span.text
             score_dict['draw_score'] = scores.find_all('p')[4].span.text
             score_dict['lose_score'] = scores.find_all('p')[5].span.text
@@ -133,13 +136,13 @@ def scraw_caipiao_result():
                            created_time)
             match_list.append(match_tuple)
         else:
-            print(trade_id)
+            log.info('trade_id %s has no result scores' % trade_id)
 
     return match_list
 
 
-def insert_match_result_to_sqlite():
-    data_list = scraw_caipiao_result()
+def insert_match_result_to_sqlite(day=None):
+    data_list = scraw_caipiao_result(yesterday=day)
     conn = sqlite3.connect('caipiao.db')
     conn.executemany('insert into lottery_score_result '
                      '(trade_id, team_score, team_l_result, concede_point, extra_score, created_time)'
